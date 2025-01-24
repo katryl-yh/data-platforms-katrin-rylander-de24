@@ -1,0 +1,9 @@
+services:
+  # here I am going to specift my micro containers
+  python-app:
+    build: .
+    volumes:
+      - .:/app # syntax for bind mount
+
+  # container 2
+  #   image: ...
