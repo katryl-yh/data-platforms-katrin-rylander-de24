@@ -1,5 +1,5 @@
 # base layer - starting from an existing image
-FROM python:3.13
+FROM python:3.12
 # instruction layer - where we will start in the container
 WORKDIR /app
 # instruction layer - copies everything from this folder in host system into /app
