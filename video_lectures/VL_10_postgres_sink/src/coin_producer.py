@@ -13,7 +13,12 @@ app = Application(
     consumer_group="coin_group"
     )
 
-coins_topic = app.topic(name="coins", value_serializer="json")
+coins_topic = app.topic(
+    name="coins", 
+    value_serializer="json"
+    )
+
+
 
 def get_latest_coin_data(symbol="BTC"):
     API_KEY = COINMARKET_API
