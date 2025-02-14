@@ -175,3 +175,4 @@ cython_debug/
 
 
 kafka_data
+state
