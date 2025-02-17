@@ -1,0 +1,87 @@
+services:
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENERS: PLAINTEXT://:9092,PLAINTEXT_INTERNAL://:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_PROCESS_ROLES: controller,broker
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_DB: messagesdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  producer1:
+    image: confluentinc/cp-kafka:latest
+    container_name: producer1
+    depends_on:
+      - kafka
+    command: >
+      bash -c "echo 'Producing messages from producer1...' &&
+      seq 100 | kafka-console-producer --broker-list kafka:29092 --topic test-topic"
+  
+  producer2:
+    image: confluentinc/cp-kafka:latest
+    container_name: producer2
+    depends_on:
+      - kafka
+    command: >
+      bash -c "echo 'Producing messages from producer2...' &&
+      seq 100 | kafka-console-producer --broker-list kafka:29092 --topic test-topic"
+
+  consumer1:
+    image: my-consumer:latest
+    container_name: consumer1
+    depends_on:
+      - kafka
+      - postgres
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC: test-topic
+      DB_HOST: postgres
+      DB_NAME: messagesdb
+      DB_USER: user
+      DB_PASSWORD: password
+    command: >
+      python /app/consumer.py --bootstrap-server kafka:29092 --topic test-topic
+      --db-host postgres --db-name messagesdb --db-user user --db-password password
+
+  consumer2:
+    image: my-consumer:latest
+    container_name: consumer2
+    depends_on:
+      - kafka
+      - postgres
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC: test-topic
+      DB_HOST: postgres
+      DB_NAME: messagesdb
+      DB_USER: user
+      DB_PASSWORD: password
+    command: >
+      python /app/consumer.py --bootstrap-server kafka:29092 --topic test-topic
+      --db-host postgres --db-name messagesdb --db-user user --db-password password
+
+volumes:
+  kafka_data:
+  postgres_data:
